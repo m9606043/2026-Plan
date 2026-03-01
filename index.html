@@ -193,18 +193,28 @@ input::-webkit-inner-spin-button {
     <div class="grid grid-cols-2 gap-12">
         <div class="space-y-4">
             <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-emerald-50 pb-2">CASH IN / 收入</p>
-            <div v-for="i in [{k:'inc', l:'收入'}, {k:'disc', l:'折扣'}, {k:'bonus', l:'紅利'}, {k:'refund', l:'退款'}, {k:'interest_in', l:'利息'}]" :key="i.k" class="ledger-row">
-                <span class="ledger-label">{{ i.l }}</span>
-                <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
-            </div>
+<div v-for="i in [
+{k:'inc', l:'收入'},
+{k:'disc', l:'折扣'},
+{k:'bonus', l:'紅利'},
+{k:'refund', l:'退款'}
+]" class="ledger-row">
+    <span class="ledger-label">{{ i.l }}</span>
+    <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
+</div>
         </div>
 
         <div class="space-y-4">
             <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b border-rose-50 pb-2">CASH OUT / 支出</p>
-            <div v-for="i in [{k:'exp', l:'支出'}, {k:'ar_out', l:'應收'}, {k:'ap_int', l:'利息'}, {k:'fee', l:'手續'}]" :key="i.k" class="ledger-row">
-                <span class="ledger-label" :class="i.k==='ar_out'?'text-blue-500':''">{{ i.l }}</span>
-                <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
-            </div>
+<div v-for="i in [
+{k:'exp', l:'支出'}, 
+{k:'home', l:'家用'}, 
+{k:'ap_int', l:'利息'}, 
+{k:'fee', l:'手續'}
+]" class="ledger-row">
+    <span class="ledger-label">{{ i.l }}</span>
+    <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
+</div>
             
             <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mt-4 flex justify-between items-center">
                 <span class="text-[10px] font-black text-slate-400 italic">實質生活開銷 (扣除代墊)</span>
@@ -273,10 +283,31 @@ input::-webkit-inner-spin-button {
             <div v-for="(v, title) in {'Family & Events':{'taipei':'台北新家入厝趴','brother':'哥哥入厝聚會','travel':'全家年度旅行','gift':'聖誕交換禮物','picnic':'野餐計畫','camp':'露營計畫'}, 'System & Growth':{'health':'Cyst 追蹤 & 年度健檢','aqara':'Aqara 自動化場景調教','ai':'學會一項新的 AI 技能'}}" :key="title" class="space-y-4">
                 <p class="text-[10px] text-slate-500 font-bold uppercase border-b border-slate-800 pb-2">{{title}}</p>
                 <div class="space-y-2">
-                    <label v-for="(label, key) in v" class="flex items-center space-x-3 p-3 bg-slate-800/40 rounded-2xl cursor-pointer hover:bg-slate-800 transition">
-                        <input type="checkbox" v-model="miles[key]" class="w-4 h-4 rounded-lg accent-blue-500 border-none">
-                        <span :class="miles[key]?'line-through opacity-30 text-slate-500':''" class="text-xs font-bold">{{label}}</span>
-                    </label>
+<label v-for="(label, key) in v"
+       :class="miles[key] 
+           ? 'bg-slate-700 border border-blue-500' 
+           : 'bg-slate-800/40 border border-transparent hover:border-slate-700'"
+       class="flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200">
+
+    <div class="flex items-center space-x-3">
+        <div :class="miles[key] 
+                ? 'bg-blue-500' 
+                : 'bg-slate-700'"
+             class="w-4 h-4 rounded-full transition-all">
+        </div>
+
+        <span :class="miles[key] 
+                ? 'text-white font-bold' 
+                : 'text-slate-300'"
+              class="text-sm transition-all">
+            {{ label }}
+        </span>
+    </div>
+
+    <input type="checkbox"
+           v-model="miles[key]"
+           class="hidden">
+</label>
                 </div>
             </div>
         </section>
@@ -299,7 +330,16 @@ input::-webkit-inner-spin-button {
         createApp({
             data() {
                 const n = new Date();
-                const dFin = {}; for(let i=1; i<=12; i++) dFin[i] = {inc:0, disc:0, bonus:0, refund:0, interest_in:0, exp:0, ar_out:0, ap_int:0, fee:0};
+                const dFin = {}; for(let i=1; i<=12; i++) dFin[i] = {
+  inc:0, 
+  disc:0, 
+  bonus:0, 
+  refund:0,
+  exp:0, 
+  home:0,
+  ap_int:0, 
+  fee:0
+};
                 return {
                     today: n, curY: 2026, curM: n.getMonth(), selDay: null, editM: n.getMonth() + 1,
                     fin: JSON.parse(localStorage.getItem('v26_fin')) || dFin,
@@ -316,8 +356,12 @@ input::-webkit-inner-spin-button {
                 firstDay() { return new Date(this.curY, this.curM, 1).getDay() },
                 totalSavings() { 
                     return Object.values(this.fin).reduce((a, m) => {
-                        const income = (m.inc||0) + (m.disc||0) + (m.bonus||0) + (m.refund||0) + (m.interest_in||0);
-                        const expense = ((m.exp||0) - (m.ar_out||0)) + (m.ap_int||0) + (m.fee||0);
+                        const income = (m.inc||0) + (m.disc||0) + (m.bonus||0) + (m.refund||0) ;
+                        const expense = 
+(m.exp||0) + 
+(m.home||0) + 
+(m.ap_int||0) + 
+(m.fee||0);
                         return a + (income - expense);
                     }, 0);
                 },
@@ -339,11 +383,17 @@ input::-webkit-inner-spin-button {
                 formatCurrency(v) { return new Intl.NumberFormat('zh-TW').format(v) },
                 calcMonthlyNet(m) { 
                     const d = this.fin[m];
-                    const income = (d.inc||0) + (d.disc||0) + (d.bonus||0) + (d.refund||0) + (d.interest_in||0);
-                    const expense = ((d.exp||0) - (d.ar_out||0)) + (d.ap_int||0) + (d.fee||0);
+                    const income = (d.inc||0) + (d.disc||0) + (d.bonus||0) + (d.refund||0) ;
+                    const expense = 
+(d.exp||0) + 
+(d.home||0) + 
+(d.ap_int||0) + 
+(d.fee||0);
                     return income - expense;
                 },
-                realSpend(m) { return (this.fin[m].exp||0) - (this.fin[m].ar_out||0) },
+                realSpend(m) { 
+  return (this.fin[m].exp||0) + (this.fin[m].home||0)
+},
                 getLog(d) { const k = `${this.curY}-${this.curM+1}-${d}`; return this.logs[k] || {} },
                 openDay(d) { this.selDay = d },
                 toggleAction(t) {
