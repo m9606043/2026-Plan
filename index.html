@@ -281,7 +281,7 @@ input::-webkit-inner-spin-button {
         </section>
 
         <section class="bg-slate-900 p-10 rounded-[3rem] shadow-2xl text-white grid grid-cols-2 gap-10">
-            <div v-for="(v, title) in {'Family & Events':{'taipei':'內湖入厝趴','brother':'尚仔入厝聚會','travel':'全家年度旅行','gift':'聖誕交換禮物','picnic':'野餐計畫','camp':'露營計畫'}, 'System & Growth':{'health':'Cyst 追蹤 & 年度健檢','aqara':'Aqara 智能家居','ai':'學會一項 AI 新技能'}}" :key="title" class="space-y-4">
+            <div v-for="(v, title) in {'Family & Events':{'taipei':'內湖入厝','brother':'尚仔入厝','travel':'全家旅行','gift':'交換禮物','picnic':'野餐計畫','camp':'露營計畫'}, 'System & Growth':{'health':'Cyst 追蹤 & 年度健檢','aqara':'Aqara 智能家居','ai':'學會一項 AI 新技能'}}" :key="title" class="space-y-4">
                 <p class="text-[10px] text-slate-500 font-bold uppercase border-b border-slate-800 pb-2">{{title}}</p>
                 <div class="space-y-2">
                     <label v-for="(label, key) in v" :key="key"
