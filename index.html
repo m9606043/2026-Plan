@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026 戰略總控台 V10</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* 強制全域字體統一 */
+        * {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif !important;
+        }
+        body { 
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-font-smoothing: antialiased;
+        }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
+        .day-cell { 
+            aspect-ratio: 1; 
+            border: 1px solid #f1f5f9; 
+            cursor: pointer; 
+            border-radius: 16px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .day-cell:hover { background: #ffffff; transform: scale(1.05); shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 10; }
+        .is-today { border: 2px solid #2563eb !important; background: #eff6ff; font-weight: 900; }
+        .dot { width: 5px; height: 5px; border-radius: 50%; margin: 1px; }
+        /* 隱藏輸入框箭頭 */
+        input[type="number"] { -moz-appearance: textfield; outline: none; border: none; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .over-target { color: #059669; }
+        .progress-bar { transition: width 1s ease-in-out; }
+    </style>
+</head>
+<body class="p-4 pb-40">
+    <div id="app" class="max-w-2xl mx-auto space-y-8">
+        
+        <header class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-black tracking-tighter italic">2026 PERFORMANCE</h1>
+                <p class="text-[10px] text-slate-400 font-bold tracking-[0.3em] uppercase mt-1">Unified Executive Dashboard</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm font-black text-blue-600 tracking-tight">{{ todayStr }}</p>
+                <div class="inline-block px-3 py-1 bg-amber-50 text-amber-600 rounded-full text-[10px] font-black mt-2 uppercase">
+                    Spending Limit: NT$ 83,000
+                </div>
+            </div>
+        </header>
+
+        <section class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
+            <div class="flex justify-between items-end">
+                <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Annual Savings Goal ($1.2M)</h3>
+                <span class="text-4xl font-black text-blue-600">{{ (totalSavings/1200000*100).toFixed(2) }}%</span>
+            </div>
+            <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div class="bg-blue-600 h-3 progress-bar" :style="{width: Math.min((totalSavings/1200000*100), 100) + '%'}"></div>
+            </div>
+            
+            <div class="space-y-3 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                <div class="grid grid-cols-4 gap-2 text-[10px] font-black text-slate-300 uppercase px-2">
+                    <div>Month</div><div class="text-right">Income</div><div class="text-right">Expense</div><div class="text-right">Net</div>
+                </div>
+                <div v-for="m in 12" :key="m" class="flex items-center gap-2 bg-slate-50/50 p-3 rounded-2xl border border-transparent hover:border-slate-200 transition">
+                    <div class="w-8 text-center font-black text-slate-300 text-xs">{{m}}M</div>
+                    <input type="number" v-model.number="finance[m].inc" class="flex-1 text-right bg-white border border-slate-100 py-2 px-3 rounded-xl font-bold text-slate-700 text-xs focus:ring-1 focus:ring-blue-100">
+                    <input type="number" v-model.number="finance[m].exp" :class="finance[m].exp > 83000 ? 'text-red-500 bg-red-50 border-red-100' : 'text-slate-700'" class="flex-1 text-right bg-white border border-slate-100 py-2 px-3 rounded-xl font-bold text-xs focus:ring-1 focus:ring-blue-100">
+                    <div class="w-24 text-right font-black text-[11px]" :class="(finance[m].inc - finance[m].exp) >= 0 ? 'text-blue-500' : 'text-red-400'">
+                        {{ formatCurrency(finance[m].inc - finance[m].exp) }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 bg-slate-900 rounded-[2.5rem] text-center shadow-2xl shadow-slate-200">
+                <p class="text-white text-3xl font-black tracking-tight">NT$ {{ formatCurrency(totalSavings) }}</p>
+                <p class="text-[10px] text-slate-500 font-bold uppercase mt-1 tracking-widest">Year-to-Date Net Savings</p>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-8">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Business Growth</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end"><p class="text-xs font-bold text-slate-500">部門年度業績 (7000萬)</p><p :class="{'over-target': workActual >= 7000}" class="text-xl font-black">{{ (workActual/7000*100).toFixed(1) }}%</p></div>
+                    <div class="relative"><input type="number" v-model.number="workActual" class="w-full bg-slate-50 border-2 border-slate-50 p-5 rounded-2xl text-2xl font-black focus:bg-white focus:border-blue-500 transition"><span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 font-bold">萬</span></div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-end"><p class="text-xs font-bold text-slate-500">韓國副業營收 (50萬)</p><p :class="{'over-target': sideBusiness >= 50}" class="text-xl font-black">{{ (sideBusiness/50*100).toFixed(1) }}%</p></div>
+                    <div class="relative"><input type="number" v-model.number="sideBusiness" class="w-full bg-slate-50 border-2 border-slate-50 p-5 rounded-2xl text-2xl font-black focus:bg-white focus:border-blue-500 transition"><span class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 font-bold">萬</span></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-6 bg-slate-50 rounded-[2rem] flex justify-between items-center"><span class="text-xs font-bold text-slate-500">出差限制 (4次)</span><div class="flex space-x-1"><button v-for="i in 4" @click="businessTrip = i" :class="businessTrip >= i ? 'bg-slate-900 text-white' : 'bg-white text-slate-300'" class="w-8 h-8 rounded-full border border-slate-100 text-xs font-black transition-all">{{i}}</button></div></div>
+                <div class="p-6 bg-slate-50 rounded-[2rem] flex justify-between items-center"><span class="text-xs font-bold text-slate-500">業務招聘 (2名)</span><div class="flex space-x-1"><button v-for="i in 2" @click="hires = i" :class="hires >= i ? 'bg-blue-600 text-white' : 'bg-white text-slate-300'" class="w-8 h-8 rounded-full border border-slate-100 text-xs font-black transition-all">{{i}}</button></div></div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Family & Quality</h3>
+            <div class="p-6 bg-orange-50/50 rounded-[2rem] flex justify-between items-center border border-orange-100"><span class="text-xs font-bold text-orange-600">📏 每季身高貼紀錄 (Q1-Q4)</span><div class="flex space-x-2"><button v-for="i in 4" @click="heightRecords = i" :class="heightRecords >= i ? 'bg-orange-500 text-white' : 'bg-white text-orange-200'" class="w-10 h-10 rounded-xl border border-orange-100 text-[10px] font-black transition-all">Q{{i}}</button></div></div>
+            <div class="space-y-5 pt-4">
+                <div v-for="goal in [{label:'❤️ 親密連結', cur:intimacyCount, max:100, color:'bg-pink-500'},{label:'👶 西瓜遠門', cur:watermelonCount, max:12, color:'bg-orange-500'},{label:'🏡 父母返鄉', cur:parentsCount, max:6, color:'bg-blue-500'},{label:'🎬 電影之夜', cur:movieCount, max:12, color:'bg-indigo-500'},{label:'💪 每週運動', cur:sportCount, max:52, color:'bg-emerald-500'}]" :key="goal.label">
+                    <div class="flex justify-between text-xs mb-1 font-bold text-slate-600"><span>{{goal.label}}</span><span>{{goal.cur}} / {{goal.max}}</span></div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div :class="goal.color" class="h-full progress-bar" :style="{width: Math.min((goal.cur/goal.max*100), 100) + '%'}"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100">
+            <div class="flex justify-between items-center mb-6"><h3 class="text-sm font-black text-slate-800">📅 Action Calendar</h3><div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-full text-[10px] font-black"><button @click="changeMonth(-1)" class="p-2 hover:bg-white rounded-full transition">⬅️</button><span class="w-24 text-center">{{ currentYear }} / {{ currentMonth + 1 }}M</span><button @click="changeMonth(1)" class="p-2 hover:bg-white rounded-full transition">➡️</button></div></div>
+            <div class="calendar-grid text-[10px] font-black text-slate-300 text-center mb-4"><div>SUN</div><div>MON</div><div>TUE</div><div>WED</div><div>THU</div><div>FRI</div><div>SAT</div></div>
+            <div class="calendar-grid gap-2">
+                <div v-for="b in firstDayOfMonth" class="day-cell opacity-0 pointer-events-none"></div>
+                <div v-for="day in daysInMonth" @click="openDay(day)" :class="['day-cell', isToday(day)?'is-today shadow-xl shadow-blue-100':'']">
+                    <span class="text-xs font-black mb-1">{{day}}</span>
+                    <div class="flex flex-wrap justify-center w-full px-1">
+                        <span v-if="getLog(day).intimacy" class="dot bg-pink-500"></span>
+                        <span v-if="getLog(day).watermelon" class="dot bg-orange-500"></span>
+                        <span v-if="getLog(day).parents" class="dot bg-blue-500"></span>
+                        <span v-if="getLog(day).movie" class="dot bg-indigo-500"></span>
+                        <span v-if="getLog(day).sport" class="dot bg-emerald-500"></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="bg-slate-900 p-12 rounded-[4rem] shadow-2xl text-white">
+            <h3 class="text-[10px] font-black text-slate-500 tracking-[0.4em] uppercase mb-10 border-b border-slate-800 pb-4">Checklist (Flexible Goals)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 text-[11px]">
+                <div class="space-y-4"><p class="text-blue-400 font-black mb-2 tracking-widest uppercase">Social & Family</p>
+                    <label v-for="(v,k) in {'taipei':'台北新家入厝趴', 'brother':'哥哥入厝聚會', 'travel':'全家年度旅行', 'gift':'聖誕交換禮物', 'picnic':'野餐計畫', 'camp':'露營計畫'}" class="flex items-center space-x-4 p-4 bg-slate-800/50 rounded-[2rem] cursor-pointer hover:bg-slate-800 transition"><input type="checkbox" v-model="milestones[k]" class="w-5 h-5 rounded-xl accent-blue-500 border-none"><span :class="milestones[k]?'line-through opacity-30 text-slate-500':''" class="font-bold">{{v}}</span></label>
+                </div>
+                <div class="space-y-4"><p class="text-purple-400 font-black mb-2 tracking-widest uppercase">System & Growth</p>
+                    <label v-for="(v,k) in {'health':'Cyst 追蹤 & 年度健檢', 'aqara':'Aqara 自動化場景調教', 'ai':'學會一項新的 AI 技能'}" class="flex items-center space-x-4 p-4 bg-slate-800/50 rounded-[2rem] cursor-pointer hover:bg-slate-800 transition"><input type="checkbox" v-model="milestones[k]" class="w-5 h-5 rounded-xl accent-purple-500 border-none"><span :class="milestones[k]?'line-through opacity-30 text-slate-500':''" class="font-bold">{{v}}</span></label>
+                </div>
+            </div>
+        </section>
+
+        <div v-if="selectedDay" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-center p-6 z-50">
+            <div class="bg-white rounded-[3rem] p-10 w-full max-w-sm space-y-6">
+                <div class="text-center font-black text-2xl text-slate-900">{{currentYear}} / {{currentMonth+1}} / {{selectedDay}}</div>
+                <div class="grid grid-cols-1 gap-3">
+                    <button v-for="act in [{k:'intimacy', l:'❤️ 親密連結', c:'bg-pink-500'},{k:'watermelon', l:'👶 西瓜遠門', c:'bg-orange-500'},{k:'parents', l:'🏡 父母返鄉', c:'bg-blue-500'},{k:'movie', l:'🎬 電影之夜', c:'bg-indigo-500'},{k:'sport', l:'💪 進行運動', c:'bg-emerald-500'}]" @click="toggleAction(act.k)" :class="getLog(selectedDay)[act.k] ? act.c + ' text-white scale-105 shadow-lg' : 'bg-slate-50 text-slate-300'" class="py-5 rounded-[2rem] font-black transition-all active:scale-95 border border-transparent">{{act.l}}</button>
+                </div>
+                <button @click="selectedDay = null" class="w-full py-2 text-slate-400 font-bold mt-4">DONE</button>
+            </div>
+        </div>
+
+        <button @click="resetAll" class="w-full text-slate-300 text-[10px] font-mono py-12 hover:text-red-500">HARD RESET SYSTEM</button>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        createApp({
+            data() {
+                const n = new Date();
+                const dFin = {}; for(let i=1; i<=12; i++) dFin[i] = {inc:0, exp:0};
+                return {
+                    today: n, currentYear: 2026, currentMonth: n.getMonth(), selectedDay: null,
+                    finance: JSON.parse(localStorage.getItem('v10_fin')) || dFin,
+                    workActual: localStorage.getItem('v10_work') || 0,
+                    sideBusiness: localStorage.getItem('v10_side') || 0,
+                    hires: localStorage.getItem('v10_hire_cnt') || 0,
+                    businessTrip: localStorage.getItem('v10_trip') || 0,
+                    heightRecords: localStorage.getItem('v10_height') || 0,
+                    logs: JSON.parse(localStorage.getItem('v10_logs')) || {},
+                    milestones: JSON.parse(localStorage.getItem('v10_miles')) || {taipei:false, brother:false, travel:false, gift:false, picnic:false, camp:false, health:false, aqara:false, ai:false}
+                }
+            },
+            computed: {
+                todayStr() { return this.today.toLocaleDateString('zh-TW', { year:'numeric', month:'long', day:'numeric' }) },
+                daysInMonth() { return new Date(this.currentYear, this.currentMonth+1, 0).getDate() },
+                firstDayOfMonth() { return new Date(this.currentYear, this.currentMonth, 1).getDay() },
+                totalSavings() { return Object.values(this.finance).reduce((a, m) => a + (m.inc - m.exp), 0) },
+                intimacyCount() { return Object.values(this.logs).filter(d => d.intimacy).length },
+                watermelonCount() { return Object.values(this.logs).filter(d => d.watermelon).length },
+                parentsCount() { return Object.values(this.logs).filter(d => d.parents).length },
+                movieCount() { return Object.values(this.logs).filter(d => d.movie).length },
+                sportCount() { return Object.values(this.logs).filter(d => d.sport).length }
+            },
+            watch: {
+                finance: { handler(v) { localStorage.setItem('v10_fin', JSON.stringify(v)) }, deep:true },
+                workActual(v) { localStorage.setItem('v10_work', v) },
+                sideBusiness(v) { localStorage.setItem('v10_side', v) },
+                hires(v) { localStorage.setItem('v10_hire_cnt', v) },
+                businessTrip(v) { localStorage.setItem('v10_trip', v) },
+                heightRecords(v) { localStorage.setItem('v10_height', v) },
+                logs: { handler(v) { localStorage.setItem('v10_logs', JSON.stringify(v)) }, deep:true },
+                milestones: { handler(v) { localStorage.setItem('v10_miles', JSON.stringify(v)) }, deep:true }
+            },
+            methods: {
+                formatCurrency(v) { return new Intl.NumberFormat('zh-TW').format(v) },
+                getLog(d) { const k = `${this.currentYear}-${this.currentMonth+1}-${d}`; return this.logs[k] || {} },
+                openDay(d) { this.selectedDay = d },
+                toggleAction(t) {
+                    const k = `${this.currentYear}-${this.currentMonth+1}-${this.selectedDay}`;
+                    if(!this.logs[k]) this.logs[k] = {};
+                    this.logs[k][t] = !this.logs[k][t];
+                },
+                changeMonth(s) { this.currentMonth += s; if(this.currentMonth<0){this.currentMonth=11;this.currentYear--} else if(this.currentMonth>11){this.currentMonth=0;this.currentYear++} },
+                isToday(d) { return this.today.getDate()===d && this.today.getMonth()===this.currentMonth && this.today.getFullYear()===this.currentYear },
+                resetAll() { if(confirm('⚠️ 確定重置所有本地紀錄？')){localStorage.clear(); location.reload()} }
+            }
+        }).mount('#app')
+    </script>
+</body>
+</html>
