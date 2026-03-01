@@ -8,37 +8,145 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* 強制全域字體統一為 Noto Sans TC */
-        * { 
-            font-family: 'Noto Sans TC', sans-serif !important; 
-            letter-spacing: -0.01em; 
-            color: #1e293b; /* 統一文字主色 */
-        }
-        body { background-color: #f1f5f9; -webkit-font-smoothing: antialiased; }
-        
-        /* 財務填寫區：採用 V13 無底線大字體風格 */
-        .ledger-input { 
-    @apply w-32 bg-transparent border-none py-1 text-right font-[900] text-slate-800 outline-none text-xl focus:text-blue-600 transition-colors;
-    text-align: right; /* 強制數字靠右 */
+/* 全域字體統一 */
+* {
+    font-family: 'Noto Sans TC', sans-serif;
+    letter-spacing: -0.01em;
 }
-        .ledger-row { @apply flex justify-between items-center py-2.5; }
-        .ledger-label { @apply text-base font-bold text-slate-500; }
 
-        /* 圓圈計數器樣式 */
-        .circle-btn { @apply w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-[11px] font-black transition-all bg-white shadow-sm text-slate-400; }
-        .circle-btn.active-dark { @apply bg-slate-900 text-white border-slate-900 scale-110 shadow-md; }
-        .circle-btn.active-blue { @apply bg-blue-600 text-white border-blue-600 scale-110 shadow-md; }
+/* 主文字顏色交給 body 控制（不要用 *） */
+body {
+    background-color: #f1f5f9;
+    -webkit-font-smoothing: antialiased;
+    color: #1e293b;
+}
 
-        /* 日曆與進度條 */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); }
-        .day-cell { aspect-ratio: 1; @apply border border-slate-100 cursor-pointer rounded-xl flex flex-col items-center justify-center transition-all duration-200 bg-white/50; }
-        .day-cell:hover { @apply bg-white scale-105 shadow-lg z-10; }
-        .is-today { @apply border-2 border-blue-600 bg-blue-50 font-black; }
-        .dot { width: 4px; height: 4px; @apply rounded-full m-0.5; }
-        .progress-fill { transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    </style>
+/* 修正 iOS input 顏色問題 */
+input {
+    -webkit-appearance: none;
+    -webkit-text-fill-color: #1e293b;
+}
+
+/* 深色區塊內 input 顏色強制白色 */
+.bg-slate-900 input {
+    -webkit-text-fill-color: white;
+}
+
+/* 財務填寫區 */
+.ledger-input {
+    width: 8rem;
+    background: transparent;
+    border: none;
+    padding: 0.25rem 0;
+    text-align: right;
+    font-weight: 900;
+    font-size: 1.25rem;
+    outline: none;
+    transition: color 0.2s ease;
+}
+
+.ledger-input:focus {
+    color: #2563eb;
+}
+
+.ledger-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+}
+
+.ledger-label {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #64748b;
+}
+
+/* 圓圈計數器 */
+.circle-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 9999px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 900;
+    background: white;
+    color: #94a3b8;
+    transition: all 0.2s ease;
+}
+
+.circle-btn.active-dark {
+    background: #0f172a;
+    color: white;
+    border-color: #0f172a;
+    transform: scale(1.1);
+}
+
+.circle-btn.active-blue {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    transform: scale(1.1);
+}
+
+/* 日曆 */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.day-cell {
+    aspect-ratio: 1;
+    border: 1px solid #f1f5f9;
+    cursor: pointer;
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    background: rgba(255,255,255,0.6);
+}
+
+.day-cell:hover {
+    background: white;
+    transform: scale(1.05);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.is-today {
+    border: 2px solid #2563eb;
+    background: #eff6ff;
+    font-weight: 900;
+}
+
+.dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    margin: 2px;
+}
+
+/* 進度條動畫 */
+.progress-fill {
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 隱藏 scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+/* 移除數字 input 箭頭 */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+</style>
 </head>
 <body class="p-4 pb-32">
     <div id="app" class="max-w-2xl mx-auto space-y-6">
