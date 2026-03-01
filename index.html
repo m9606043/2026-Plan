@@ -3,36 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026 戰略總控台 V26 修正版</title>
+    <title>2026 年度計劃 V33</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-/* 全域字體統一 */
+/* --- 以下保留你原始的全部樣式，完全不動 --- */
 * {
     font-family: 'Noto Sans TC', sans-serif;
     letter-spacing: -0.01em;
 }
 
-/* 主文字顏色交給 body 控制（不要用 *） */
 body {
     background-color: #f1f5f9;
     -webkit-font-smoothing: antialiased;
     color: #1e293b;
 }
 
-/* 修正 iOS input 顏色問題 */
 input {
     -webkit-appearance: none;
     -webkit-text-fill-color: #1e293b;
 }
 
-/* 深色區塊內 input 顏色強制白色 */
 .bg-slate-900 input {
     -webkit-text-fill-color: white;
 }
 
-/* 財務填寫區 */
 .ledger-input {
     width: 8rem;
     background: transparent;
@@ -62,7 +58,6 @@ input {
     color: #64748b;
 }
 
-/* 圓圈計數器 */
 .circle-btn {
     width: 1.75rem;
     height: 1.75rem;
@@ -92,7 +87,6 @@ input {
     transform: scale(1.1);
 }
 
-/* 日曆 */
 .calendar-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -130,31 +124,34 @@ input {
     margin: 2px;
 }
 
-/* 進度條動畫 */
 .progress-fill {
     transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 隱藏 scrollbar */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
 
-/* 移除數字 input 箭頭 */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
+
+/* --- 僅新增日曆升級所需的專屬樣式 --- */
+.is-weekend-text { color: #f87171 !important; }
+.is-holiday-bg { background: #fff1f2 !important; border: 1px solid #ffe4e6 !important; }
+.holiday-label { font-size: 8px; color: #fb7185; font-weight: 900; margin-top: 1px; line-height: 1; }
 </style>
 </head>
+
 <body class="p-4 pb-32">
     <div id="app" class="max-w-2xl mx-auto space-y-6">
         
         <header class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-200/50 flex justify-between items-center">
             <div>
                 <h1 class="text-2xl font-black tracking-tighter italic text-slate-900">2026 STRATEGY</h1>
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em]">年度計化儀表板</p>
+                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-[0.3em]">年度計劃儀表板</p>
             </div>
             <div class="text-right">
                 <p class="text-xs font-black text-blue-600 tracking-tight">{{ todayStr }}</p>
@@ -162,17 +159,16 @@ input::-webkit-inner-spin-button {
             </div>
         </header>
 
-
         <section class="bg-white rounded-[2.5rem] shadow-xl border border-slate-200/60 overflow-hidden">
             <div class="p-8 bg-slate-900 text-white space-y-4">
                 <div class="flex justify-between items-end">
                     <span class="text-[10px] font-bold text-slate-500">儲蓄目標 (1,200,000)</span>
-                    <span class="text-3xl font-[900] text-blue-400" style="color:#60a5fa !important">{{ (totalSavings/1200000*100).toFixed(2) }}%</span>
+                    <span class="text-3xl font-[900] text-blue-400">{{ (totalSavings/1200000*100).toFixed(2) }}%</span>
                 </div>
                 <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
                     <div class="bg-blue-500 h-full progress-fill" :style="{width: Math.min((totalSavings/1200000*100), 100) + '%'}"></div>
                 </div>
-                <p class="text-center font-[900] text-2xl tracking-tighter" style="color:white !important">NT$ {{ formatCurrency(totalSavings) }}</p>
+                <p class="text-center font-[900] text-2xl tracking-tighter">NT$ {{ formatCurrency(totalSavings) }}</p>
             </div>
 
             <div class="flex bg-slate-50 p-2 border-b overflow-x-auto no-scrollbar">
@@ -181,50 +177,38 @@ input::-webkit-inner-spin-button {
                     class="min-w-[40px] py-2 mx-1 rounded-xl text-xs font-black transition-all">{{m}}M</button>
             </div>
 
-<div class="p-8 space-y-10">
-                <div class="p-8 space-y-10">
-    <div class="flex justify-between items-center px-2">
-        <h4 class="text-base font-bold">{{ editM }} 月份對帳明細</h4>
-        <span :class="calcMonthlyNet(editM) >= 0 ? 'text-blue-600 bg-blue-50' : 'text-red-500 bg-red-50'" class="px-4 py-1.5 rounded-xl font-black text-xs">
-            月結餘: {{ formatCurrency(calcMonthlyNet(editM)) }}
-        </span>
-    </div>
+            <div class="p-8 space-y-10">
+                <div class="flex justify-between items-center px-2">
+                    <h4 class="text-base font-bold">{{ editM }} 月份對帳明細</h4>
+                    <span :class="calcMonthlyNet(editM) >= 0 ? 'text-blue-600 bg-blue-50' : 'text-red-500 bg-red-50'" class="px-4 py-1.5 rounded-xl font-black text-xs">
+                        月結餘: {{ formatCurrency(calcMonthlyNet(editM)) }}
+                    </span>
+                </div>
 
-    <div class="grid grid-cols-2 gap-12">
-        <div class="space-y-4">
-            <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-emerald-50 pb-2">CASH IN / 收入</p>
-<div v-for="i in [
-{k:'inc', l:'收入'},
-{k:'disc', l:'折扣'},
-{k:'bonus', l:'紅利'},
-{k:'refund', l:'退款'}
-]" class="ledger-row">
-    <span class="ledger-label">{{ i.l }}</span>
-    <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
-</div>
-        </div>
+                <div class="grid grid-cols-2 gap-12">
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest border-b border-emerald-50 pb-2">CASH IN / 收入</p>
+                        <div v-for="i in [{k:'inc', l:'收入'}, {k:'disc', l:'折扣'}, {k:'bonus', l:'紅利'}, {k:'refund', l:'退款'}]" :key="i.k" class="ledger-row">
+                            <span class="ledger-label">{{ i.l }}</span>
+                            <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
+                        </div>
+                    </div>
 
-        <div class="space-y-4">
-            <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b border-rose-50 pb-2">CASH OUT / 支出</p>
-<div v-for="i in [
-{k:'exp', l:'支出'}, 
-{k:'home', l:'家用'}, 
-{k:'ap_int', l:'利息'}, 
-{k:'fee', l:'手續'}
-]" class="ledger-row">
-    <span class="ledger-label">{{ i.l }}</span>
-    <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
-</div>
-            
-            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mt-4 flex justify-between items-center">
-                <span class="text-[10px] font-black text-slate-400 italic">實質生活開銷 (扣除代墊)</span>
-                <span :class="realSpend(editM) > 83000 ? 'text-red-600' : 'text-emerald-600'" class="font-black text-lg">
-                    {{ formatCurrency(realSpend(editM)) }}
-                </span>
+                    <div class="space-y-4">
+                        <p class="text-[10px] font-black text-rose-500 uppercase tracking-widest border-b border-rose-50 pb-2">CASH OUT / 支出</p>
+                        <div v-for="i in [{k:'exp', l:'支出'}, {k:'home', l:'家用'}, {k:'ap_int', l:'利息'}, {k:'fee', l:'手續'}]" :key="i.k" class="ledger-row">
+                            <span class="ledger-label">{{ i.l }}</span>
+                            <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mt-4 flex justify-between items-center">
+                            <span class="text-[10px] font-black text-slate-400 italic">實質生活開銷 (扣除代墊)</span>
+                            <span :class="realSpend(editM) > 83000 ? 'text-red-600' : 'text-emerald-600'" class="font-black text-lg">
+                                {{ formatCurrency(realSpend(editM)) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-</div>
         </section>
 
         <section class="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-200/60 grid grid-cols-2 gap-8">
@@ -243,8 +227,8 @@ input::-webkit-inner-spin-button {
                 </div>
             </div>
             <div class="col-span-2 grid grid-cols-2 gap-4">
-                <div class="p-5 bg-slate-50 rounded-2xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-400 uppercase">出差</span><div class="flex space-x-1"><button v-for="i in 4" @click="trip = (trip === i ? i - 1 : i)" :class="trip >= i ? 'bg-slate-900 text-white' : 'bg-white text-slate-300'" class="w-7 h-7 rounded-full border border-slate-100 text-[10px] font-black transition-all shadow-sm">{{i}}</button></div></div>
-                <div class="p-5 bg-slate-50 rounded-2xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-400 uppercase">招募</span><div class="flex space-x-1"><button v-for="i in 2" @click="hire = (hire === i ? i - 1 : i)" :class="hire >= i ? 'bg-blue-600 text-white' : 'bg-white text-slate-300'" class="w-7 h-7 rounded-full border border-slate-100 text-[10px] font-black transition-all shadow-sm">{{i}}</button></div></div>
+                <div class="p-5 bg-slate-50 rounded-2xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-400 uppercase">出差</span><div class="flex space-x-1"><button v-for="i in 4" :key="i" @click="trip = (trip === i ? i - 1 : i)" :class="trip >= i ? 'bg-slate-900 text-white' : 'bg-white text-slate-300'" class="circle-btn">{{i}}</button></div></div>
+                <div class="p-5 bg-slate-50 rounded-2xl flex justify-between items-center"><span class="text-[10px] font-black text-slate-400 uppercase">招募</span><div class="flex space-x-1"><button v-for="i in 2" :key="i" @click="hire = (hire === i ? i - 1 : i)" :class="hire >= i ? 'bg-blue-600 text-white' : 'bg-white text-slate-300'" class="circle-btn">{{i}}</button></div></div>
             </div>
         </section>
 
@@ -252,21 +236,38 @@ input::-webkit-inner-spin-button {
             <div class="p-4 bg-orange-50/50 rounded-2xl flex justify-between items-center border border-orange-100">
                 <span class="text-sm font-[900] text-orange-600">📏 小熊身高量測 (Q1-Q4)</span>
                 <div class="flex space-x-2">
-                    <button v-for="(v, idx) in heightArr" @click="heightArr[idx] = !heightArr[idx]" :class="heightArr[idx] ? 'bg-orange-500 text-white shadow-lg' : 'bg-white text-orange-200'" class="w-9 h-9 rounded-xl border border-orange-100 text-[10px] font-bold transition-all">Q{{idx+1}}</button>
+                    <button v-for="(v, idx) in heightArr" :key="idx" @click="heightArr[idx] = !heightArr[idx]" :class="heightArr[idx] ? 'bg-orange-500 text-white shadow-lg' : 'bg-white text-orange-200'" class="w-9 h-9 rounded-xl border border-orange-100 text-[10px] font-bold transition-all">Q{{idx+1}}</button>
                 </div>
             </div>
             <div class="space-y-4">
-                <div v-for="g in [{l:'❤️ 親密連結', c:intimacy, m:100, clr:'bg-pink-500'},{l:'👶 西瓜遠門', c:watermelon, m:12, clr:'bg-orange-500'},{l:'🏡 父母返鄉', c:parents, m:6, clr:'bg-blue-500'},{l:'🎬 電影之夜', c:movie, m:12, clr:'bg-indigo-500'},{l:'💪 每週運動', c:sport, m:52, clr:'bg-emerald-500'}]" :key="g.l" class="space-y-1">
+                <div v-for="g in [{l:'❤️ 親密連結', c:intimacy, m:100, clr:'bg-pink-500'},{l:'🐻 小熊出遊', c:watermelon, m:12, clr:'bg-orange-500'},{l:'🏡 返鄉探親', c:parents, m:6, clr:'bg-blue-500'},{l:'🎬 電影之夜', c:movie, m:12, clr:'bg-indigo-500'},{l:'💪 每週運動', c:sport, m:52, clr:'bg-emerald-500'}]" :key="g.l" class="space-y-1">
                     <div class="flex justify-between text-[11px] font-bold text-slate-500 uppercase italic"><span>{{g.l}}</span><span>{{g.c}} / {{g.m}}</span></div>
                     <div class="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden"><div :class="g.clr" class="h-full progress-fill" :style="{width: Math.min((g.c/g.m*100), 100) + '%'}"></div></div>
                 </div>
             </div>
+            
             <div class="pt-6 border-t border-slate-50">
-                <div class="flex justify-between items-center mb-4"><span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">行動日曆行動</span><div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-full text-[10px] font-[900]"><button @click="changeMonth(-1)" class="px-2 text-slate-400">⬅️</button><span>{{ curY }} / {{ curM + 1 }}M</span><button @click="changeMonth(1)" class="px-2 text-slate-400">➡️</button></div></div>
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">行動日曆行動</span>
+                    <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-full text-[10px] font-[900]">
+                        <button @click="changeMonth(-1)" class="px-2 text-slate-400">⬅️</button>
+                        <span>{{ curY }} / {{ curM + 1 }}M</span>
+                        <button @click="changeMonth(1)" class="px-2 text-slate-400">➡️</button>
+                    </div>
+                </div>
+
+                <div class="calendar-grid gap-1 mb-1 text-[10px] font-bold text-slate-400">
+                    <div class="text-center">日</div><div class="text-center">一</div><div class="text-center">二</div>
+                    <div class="text-center">三</div><div class="text-center">四</div><div class="text-center">五</div>
+                    <div class="text-center">六</div>
+                </div>
+
                 <div class="calendar-grid gap-1">
-                    <div v-for="b in firstDay" class="day-cell opacity-0 pointer-events-none"></div>
-                    <div v-for="day in daysInM" @click="openDay(day)" :class="['day-cell', isToday(day)?'is-today shadow-lg shadow-blue-50':'']">
-                        <span class="text-[10px] font-bold text-slate-400">{{day}}</span>
+                    <div v-for="b in firstDay" :key="'empty-'+b" class="day-cell opacity-0 pointer-events-none"></div>
+                    <div v-for="day in daysInM" :key="day" @click="openDay(day)" 
+                         :class="['day-cell', isToday(day)?'is-today shadow-lg':'', isHoliday(day)?'is-holiday-bg':'']">
+                        <span class="text-[10px] font-bold" :class="isWeekend(day) ? 'is-weekend-text' : 'text-slate-400'">{{day}}</span>
+                        <span v-if="isHoliday(day)" class="holiday-label">{{ getHolidayName(day) }}</span>
                         <div class="flex flex-wrap justify-center mt-0.5">
                             <span v-if="getLog(day).intimacy" class="dot bg-pink-500"></span>
                             <span v-if="getLog(day).watermelon" class="dot bg-orange-500"></span>
@@ -280,34 +281,18 @@ input::-webkit-inner-spin-button {
         </section>
 
         <section class="bg-slate-900 p-10 rounded-[3rem] shadow-2xl text-white grid grid-cols-2 gap-10">
-            <div v-for="(v, title) in {'Family & Events':{'taipei':'台北新家入厝趴','brother':'哥哥入厝聚會','travel':'全家年度旅行','gift':'聖誕交換禮物','picnic':'野餐計畫','camp':'露營計畫'}, 'System & Growth':{'health':'Cyst 追蹤 & 年度健檢','aqara':'Aqara 自動化場景調教','ai':'學會一項新的 AI 技能'}}" :key="title" class="space-y-4">
+            <div v-for="(v, title) in {'Family & Events':{'taipei':'內湖入厝趴','brother':'尚仔入厝聚會','travel':'全家年度旅行','gift':'聖誕交換禮物','picnic':'野餐計畫','camp':'露營計畫'}, 'System & Growth':{'health':'Cyst 追蹤 & 年度健檢','aqara':'Aqara 智能家居','ai':'學會一項 AI 新技能'}}" :key="title" class="space-y-4">
                 <p class="text-[10px] text-slate-500 font-bold uppercase border-b border-slate-800 pb-2">{{title}}</p>
                 <div class="space-y-2">
-<label v-for="(label, key) in v"
-       :class="miles[key] 
-           ? 'bg-slate-700 border border-blue-500' 
-           : 'bg-slate-800/40 border border-transparent hover:border-slate-700'"
-       class="flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200">
-
-    <div class="flex items-center space-x-3">
-        <div :class="miles[key] 
-                ? 'bg-blue-500' 
-                : 'bg-slate-700'"
-             class="w-4 h-4 rounded-full transition-all">
-        </div>
-
-        <span :class="miles[key] 
-                ? 'text-white font-bold' 
-                : 'text-slate-300'"
-              class="text-sm transition-all">
-            {{ label }}
-        </span>
-    </div>
-
-    <input type="checkbox"
-           v-model="miles[key]"
-           class="hidden">
-</label>
+                    <label v-for="(label, key) in v" :key="key"
+                        :class="miles[key] ? 'bg-slate-700 border border-blue-500' : 'bg-slate-800/40 border border-transparent hover:border-slate-700'"
+                        class="flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200">
+                        <div class="flex items-center space-x-3">
+                            <div :class="miles[key] ? 'bg-blue-500' : 'bg-slate-700'" class="w-4 h-4 rounded-full transition-all"></div>
+                            <span :class="miles[key] ? 'text-white font-bold' : 'text-slate-300'" class="text-sm">{{ label }}</span>
+                        </div>
+                        <input type="checkbox" v-model="miles[key]" class="hidden">
+                    </label>
                 </div>
             </div>
         </section>
@@ -316,7 +301,7 @@ input::-webkit-inner-spin-button {
             <div class="bg-white rounded-[2.5rem] p-10 w-full max-w-sm space-y-6 text-center shadow-2xl">
                 <h3 class="font-[900] text-2xl border-b pb-4">{{curY}} / {{curM+1}} / {{selDay}}</h3>
                 <div class="grid grid-cols-1 gap-2.5">
-                    <button v-for="act in [{k:'intimacy', l:'❤️ 親密連結', c:'bg-pink-500'},{k:'watermelon', l:'👶 西瓜遠門', c:'bg-orange-500'},{k:'parents', l:'🏡 父母返鄉', c:'bg-blue-500'},{k:'movie', l:'🎬 電影之夜', c:'bg-indigo-500'},{k:'sport', l:'💪 進行運動', c:'bg-emerald-500'}]" @click="toggleAction(act.k)" :class="getLog(selDay)[act.k] ? act.c + ' text-white scale-105' : 'bg-slate-50 text-slate-300'" class="py-4 rounded-2xl font-[900] text-sm transition-all">{{act.l}}</button>
+                    <button v-for="act in [{k:'intimacy', l:'❤️ 親密連結', c:'bg-pink-500'},{k:'watermelon', l:'🐻 小熊出遊', c:'bg-orange-500'},{k:'parents', l:'🏡 返鄉探親', c:'bg-blue-500'},{k:'movie', l:'🎬 電影之夜', c:'bg-indigo-500'},{k:'sport', l:'💪 進行運動', c:'bg-emerald-500'}]" :key="act.k" @click="toggleAction(act.k)" :class="getLog(selDay)[act.k] ? act.c + ' text-white scale-105' : 'bg-slate-50 text-slate-300'" class="py-4 rounded-2xl font-[900] text-sm transition-all">{{act.l}}</button>
                 </div>
                 <button @click="selDay = null" class="w-full text-slate-300 font-bold mt-4 uppercase text-[10px]">完成並關閉</button>
             </div>
@@ -330,16 +315,7 @@ input::-webkit-inner-spin-button {
         createApp({
             data() {
                 const n = new Date();
-                const dFin = {}; for(let i=1; i<=12; i++) dFin[i] = {
-  inc:0, 
-  disc:0, 
-  bonus:0, 
-  refund:0,
-  exp:0, 
-  home:0,
-  ap_int:0, 
-  fee:0
-};
+                const dFin = {}; for(let i=1; i<=12; i++) dFin[i] = {inc:0, disc:0, bonus:0, refund:0, exp:0, home:0, ap_int:0, fee:0};
                 return {
                     today: n, curY: 2026, curM: n.getMonth(), selDay: null, editM: n.getMonth() + 1,
                     fin: JSON.parse(localStorage.getItem('v26_fin')) || dFin,
@@ -357,11 +333,7 @@ input::-webkit-inner-spin-button {
                 totalSavings() { 
                     return Object.values(this.fin).reduce((a, m) => {
                         const income = (m.inc||0) + (m.disc||0) + (m.bonus||0) + (m.refund||0) ;
-                        const expense = 
-(m.exp||0) + 
-(m.home||0) + 
-(m.ap_int||0) + 
-(m.fee||0);
+                        const expense = (m.exp||0) + (m.home||0) + (m.ap_int||0) + (m.fee||0);
                         return a + (income - expense);
                     }, 0);
                 },
@@ -384,26 +356,28 @@ input::-webkit-inner-spin-button {
                 calcMonthlyNet(m) { 
                     const d = this.fin[m];
                     const income = (d.inc||0) + (d.disc||0) + (d.bonus||0) + (d.refund||0) ;
-                    const expense = 
-(d.exp||0) + 
-(d.home||0) + 
-(d.ap_int||0) + 
-(d.fee||0);
+                    const expense = (d.exp||0) + (d.home||0) + (d.ap_int||0) + (d.fee||0);
                     return income - expense;
                 },
-                realSpend(m) { 
-  return (this.fin[m].exp||0) + (this.fin[m].home||0)
-},
+                realSpend(m) { return (this.fin[m].exp||0) + (this.fin[m].home||0) },
                 getLog(d) { const k = `${this.curY}-${this.curM+1}-${d}`; return this.logs[k] || {} },
                 openDay(d) { this.selDay = d },
                 toggleAction(t) {
                     const k = `${this.curY}-${this.curM+1}-${this.selDay}`;
                     if(!this.logs[k]) this.logs[k] = {};
                     this.logs[k][t] = !this.logs[k][t];
-                    this.logs = { ...this.logs }; // 強制觸發 Vue 響應式更新
+                    this.logs = { ...this.logs };
                 },
                 changeMonth(s) { this.curM += s; if(this.curM<0){this.curM=11;this.curY--} else if(this.curM>11){this.curM=0;this.curY++} },
                 isToday(d) { return this.today.getDate()===d && this.today.getMonth()===this.curM && this.today.getFullYear()===this.curY },
+                // 假日邏輯
+                isWeekend(d) { const day = new Date(this.curY, this.curM, d).getDay(); return day === 0 || day === 6; },
+                isHoliday(d) { return !!this.getHolidayName(d); },
+                getHolidayName(d) {
+                    const dateStr = `${this.curM + 1}/${d}`;
+                    const holidays = {"1/1":"元旦","2/16":"除夕","2/17":"初一","2/18":"初二","2/19":"初三","2/20":"初四","2/21":"初五","2/28":"和平紀念","4/2":"兒童節","4/3":"清明節","5/1":"勞動節","6/19":"端午節","9/25":"中秋節","10/10":"國慶日"};
+                    return holidays[dateStr] || null;
+                },
                 resetAll() { if(confirm('⚠️ 警告：這將徹底清空數據？')){localStorage.clear(); location.reload()} }
             }
         }).mount('#app')
