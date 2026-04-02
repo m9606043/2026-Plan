@@ -201,7 +201,7 @@ input::-webkit-inner-spin-button {
                             <input type="number" v-model.number="fin[editM][i.k]" class="ledger-input" placeholder="0">
                         </div>
                         <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 mt-4 flex justify-between items-center">
-                            <span class="text-[10px] font-black text-slate-400 italic">實質生活開銷 (扣除代墊)</span>
+                            <span class="text-[10px] font-black text-slate-400 italic">本月花費</span>
                             <span :class="realSpend(editM) > 83000 ? 'text-red-600' : 'text-emerald-600'" class="font-black text-lg">
                                 {{ formatCurrency(realSpend(editM)) }}
                             </span>
